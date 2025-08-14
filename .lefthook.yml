@@ -1,0 +1,8 @@
+pre-commit:
+  jobs:
+    - name: Actions Lint
+      glob:
+        # https://github.com/rhysd/actionlint/issues/46
+        # - "dotnet/*/action.yml"
+        - ".github/workflows/*.yml"
+      run: actionlint

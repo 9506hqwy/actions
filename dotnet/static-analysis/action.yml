@@ -1,0 +1,36 @@
+name: Static Analysis
+description: Run static analysis tools
+runs:
+  using: composite
+  steps:
+    - name: Check Format
+      run: |
+        echo "::group::dotnet format"
+
+        STATUS=0
+        REPORT_PATH=$(mktemp --suffix ".json")
+        if ! dotnet format --no-restore --verify-no-changes --verbosity normal --report "${REPORT_PATH}"; then
+          COUNT=$(jq -r '. | length' "${REPORT_PATH}")
+          echo "::error ::dotnet format found some issues at ${COUNT} files."
+
+          jq -c '.[0:1][]' "${REPORT_PATH}" | while read -r FILE_ERROR
+          do
+            FILE_ABSPATH=$(jq -r '.FilePath' <<<"${FILE_ERROR}")
+            FILE_PATH=$(realpath --relative-to="${GITHUB_WORKSPACE}" "${FILE_ABSPATH}")
+
+            jq -c '.FileChanges[0:1][]' <<<"${FILE_ERROR}" | while read -r LINE_ERROR
+            do
+              LINE=$(jq -r '.LineNumber' <<<"${LINE_ERROR}")
+              COL=$(jq -r '.CharNumber' <<<"${LINE_ERROR}")
+              MESSAGE=$(jq -r '.FormatDescription' <<<"${LINE_ERROR}")
+              echo "::error file=${FILE_PATH},line=${LINE},col=${COL}::${MESSAGE}"
+            done
+          done
+
+          STATUS=1
+        fi
+
+        echo "::endgroup::"
+
+        exit ${STATUS}
+      shell: bash

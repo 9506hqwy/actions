@@ -1,0 +1,63 @@
+name: Test
+description: Run test projects and report coverages
+inputs:
+  output-dir:
+    description: Directory to store coverage reports
+    required: false
+    default: artifacts
+runs:
+  using: composite
+  steps:
+    - name: Run Tests
+      id: test
+      run: |
+        echo "::group::dotnet test"
+        OUTPUT_DIR=$(mktemp -d)
+        echo "coverage_path=${OUTPUT_DIR}" >> "${GITHUB_OUTPUT}"
+
+        dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory "${OUTPUT_DIR}"
+        echo "::endgroup::"
+      shell: bash
+
+    - name: Install ReportGenerator
+      run: |
+        echo "::group::dotnet tool install"
+        dotnet tool install -g dotnet-reportgenerator-globaltool
+        echo "::endgroup::"
+      shell: bash
+
+    - name: Generate Coverage Summary Report
+      run: |
+        echo "::group::reportgenerator summary"
+        reportgenerator -reports:"${COVERAGE_PATH}/*/coverage.cobertura.xml" -targetdir:"${OUTPUT_PATH}" -reporttypes:"MarkdownSummaryGithub;TextSummary"
+        echo "::endgroup::"
+
+        cat "${OUTPUT_PATH}/Summary.txt"
+        cat "${OUTPUT_PATH}/SummaryGithub.md" > "${GITHUB_STEP_SUMMARY}"
+      shell: bash
+      env:
+        COVERAGE_PATH: ${{ steps.test.outputs.coverage_path }}
+        OUTPUT_PATH: ${{ github.workspace }}/${{ inputs.output-dir }}
+
+    - name: Generate Coverage HTML Report
+      id: html
+      run: |
+        echo "::group::reportgenerator html"
+        OUTPUT_DIR=$(mktemp -d)
+        echo "coverage_path=${OUTPUT_DIR}" >> "${GITHUB_OUTPUT}"
+
+        reportgenerator -reports:"${COVERAGE_PATH}/*/coverage.cobertura.xml" -targetdir:"${OUTPUT_DIR}" -reporttypes:"Html"
+        echo "::endgroup::"
+      shell: bash
+      env:
+        COVERAGE_PATH: ${{ steps.test.outputs.coverage_path }}
+
+    - name: Archive Coverage HTML Report
+      run: |
+        echo "::group::tar"
+        tar -zcf "${DOC_FILE_PATH}" -- *
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ steps.html.outputs.coverage_path }}
+      env:
+        DOC_FILE_PATH: ${{ github.workspace }}/${{ inputs.output-dir }}/coverage.tar.gz

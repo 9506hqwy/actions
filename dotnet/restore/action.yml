@@ -1,0 +1,11 @@
+name: Restore
+description: Restore project dependencies
+runs:
+  using: composite
+  steps:
+    - name: Restore Dependencies
+      run: |
+        echo "::group::dotnet restore"
+        dotnet restore
+        echo "::endgroup::"
+      shell: bash

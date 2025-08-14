@@ -1,0 +1,58 @@
+name: dotnet CI
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Setup Repository Information
+      id: repository
+      run: |
+        mkdir -p ./artifacts
+        echo "name=${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}" >> "${GITHUB_OUTPUT}"
+
+    - name: Restore Dependencies
+      uses: 9506hqwy/actions/dotnet/restore@main
+
+    - name: Build Debug
+      uses: 9506hqwy/actions/dotnet/build@main
+
+    - name: Check Format
+      uses: 9506hqwy/actions/dotnet/static-analysis@main
+
+    - name: Run Tests
+      uses: 9506hqwy/actions/dotnet/test@main
+      with:
+        output-dir: artifacts
+
+    - name: Build Release
+      uses: 9506hqwy/actions/dotnet/build@main
+      with:
+        configuration: Release
+
+    - name: Generate Artifact
+      uses: 9506hqwy/actions/dotnet/artifact@main
+      with:
+        output-dir: artifacts
+        doc-filename: help-${{ steps.repository.outputs.name }}.tar.gz
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.repository.outputs.name }}-${{ github.workflow }}-${{ runner.os }}-${{ runner.arch }}-${{ github.run_number }}
+        path: ${{ github.workspace }}/artifacts/
+        retention-days: 1

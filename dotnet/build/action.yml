@@ -1,0 +1,18 @@
+name: Build
+description: Build the project using the specified configuration
+inputs:
+  configuration:
+    description: Configuration to build
+    required: false
+    default: Debug
+runs:
+  using: composite
+  steps:
+    - name: Build ${{ inputs.configuration }}
+      run: |
+        echo "::group::dotnet build"
+        dotnet build --no-restore -c "${CONFIGURATION}"
+        echo "::endgroup::"
+      shell: bash
+      env:
+        CONFIGURATION: ${{ inputs.configuration }}

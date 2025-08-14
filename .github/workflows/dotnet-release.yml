@@ -1,0 +1,50 @@
+name: dotnet Release
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Setup Repository Information
+      id: repository
+      run: |
+        mkdir -p ./artifacts
+        echo "name=${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}" >> "${GITHUB_OUTPUT}"
+
+    - name: Restore Dependencies
+      uses: 9506hqwy/actions/dotnet/restore@main
+
+    - name: Build Release
+      uses: 9506hqwy/actions/dotnet/build@main
+      with:
+        configuration: Release
+
+    - name: Generate Artifact
+      uses: 9506hqwy/actions/dotnet/artifact@main
+      with:
+        output-dir: artifacts
+        doc-filename: help-${{ steps.repository.outputs.name }}.tar.gz
+
+    - name: Create Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh config set prompt disabled
+        gh release create "${GITHUB_REF_NAME}" ./artifacts/* -t "v${GITHUB_REF_NAME}" -d
