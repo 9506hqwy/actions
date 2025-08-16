@@ -1,0 +1,25 @@
+name: Setup
+description: Setup the environment for the repository.
+outputs:
+  repository-name:
+    description: The name of the repository
+    value: ${{ steps.repository.outputs.name }}
+runs:
+  using: composite
+  steps:
+    - name: Setup Repository Information
+      id: repository
+      run: |
+        Write-Output "::group::setup repository information"
+        mkdir -p .\artifacts
+        $REPOSITORY_NAME = ${env:GITHUB_REPOSITORY}.split("/")[-1]
+        Write-Output "name=${REPOSITORY_NAME}" >> "${env:GITHUB_OUTPUT}"
+        Write-Output "::endgroup::"
+      shell: pwsh
+
+    - name: Install Project Management Tool
+      run: |
+        Write-Output "::group::pip install uv"
+        pip install uv
+        Write-Output "::endgroup::"
+      shell: pwsh

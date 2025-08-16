@@ -1,0 +1,64 @@
+name: Artifact
+description: Store build artifacts and documentation
+inputs:
+  repository-name:
+    description: Name of the repository
+    required: true
+  output-dir:
+    description: Directory to store artifacts
+    required: false
+    default: artifacts
+  doc-filename:
+    description: Filename for the documentation archive
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Generate Packages
+      run: |
+        echo "::group::uv build"
+        uv build -o "${OUTPUT_PATH}"
+        echo "::endgroup::"
+      shell: bash
+      env:
+        OUTPUT_PATH: ${{ github.workspace }}/${{ inputs.output-dir }}
+
+    - name: Install Libraries
+      run: |
+        echo "::group::uv sync"
+        uv sync --group doc
+        echo "::endgroup::"
+      shell: bash
+
+    - name: Generate API Documentations
+      id: api
+      run: |
+        echo "::group::uv run sphinx-apidoc"
+        OUTPUT_DIR=$(mktemp -d)
+        echo "doc_path=${OUTPUT_DIR}" >> "${GITHUB_OUTPUT}"
+
+        uv run sphinx-apidoc -F -f -a -H "${REPOSITORY_NAME}" -A "${GITHUB_REPOSITORY_OWNER}" -V latest -o "${OUTPUT_DIR}" src
+        echo "::endgroup::"
+      shell: bash
+      env:
+        REPOSITORY_NAME: ${{ inputs.repository-name }}
+
+    - name: Generate Documentations
+      run: |
+        echo "::group::uv run make"
+        uv run make html
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ steps.api.outputs.doc_path }}
+      env:
+        UV_PROJECT: ${{ github.workspace }}
+
+    - name: Archive Documentations
+      run: |
+        echo "::group::tar"
+        tar -zcf "${DOC_FILE_PATH}" -- *
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ steps.api.outputs.doc_path }}/_build/html
+      env:
+        DOC_FILE_PATH: ${{ github.workspace }}/${{ inputs.output-dir }}/${{ inputs.doc-filename }}
