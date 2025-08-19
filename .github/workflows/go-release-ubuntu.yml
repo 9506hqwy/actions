@@ -1,0 +1,37 @@
+name: Go Release Ubuntu
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v5
+
+    - name: Setup
+      id: setup
+      uses: 9506hqwy/actions/go/setup-bash@main
+
+    - name: Generate Artifact
+      uses: 9506hqwy/actions/go/artifact-bash@main
+      with:
+        configuration: Release
+        output-dir: artifacts
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.setup.outputs.repository-name }}-${{ github.workflow }}-${{ steps.setup.outputs.go-target }}-${{ github.run_number }}
+        path: ${{ github.workspace }}/artifacts/
+        retention-days: 1

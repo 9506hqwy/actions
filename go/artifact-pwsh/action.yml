@@ -1,0 +1,56 @@
+name: Artifact
+description: Store build artifacts and documentation
+inputs:
+  configuration:
+    description: Configuration to archive
+    required: false
+    default: Debug
+  output-dir:
+    description: Directory to store artifacts
+    required: false
+    default: artifacts
+runs:
+  using: composite
+  steps:
+    - name: Generate Binaries
+      run: |
+        Write-Output "::group::go build"
+        $GOOS = go env GOOS
+        $GOARCH = go env GOARCH
+
+        Get-Item @(".\cmd", ".\examples") -ErrorAction ignore |% { Get-ChildItem "$_" -Directory |% {
+            $Name = $_.Name
+            $TEMP_PATH = ""
+            $BIN_PATH = "${env:OUTPUT_PATH}\${Name}.exe"
+            if ("${env:CONFIGURATION}" -eq "Release") {
+                $TEMP_PATH = Join-Path -Path ([IO.Path]::GetTempPath()) -ChildPath (New-Guid)
+                mkdir -p "${TEMP_PATH}"
+                $BIN_PATH = "${TEMP_PATH}\${Name}.exe"
+            }
+
+            go build `
+                -trimpath `
+                -ldflags "-s -w -X main.version=$(${env:GITHUB_REF_NAME}.TrimStart('v')) -X main.commit=${env:GITHUB_SHA}" `
+                -o "${BIN_PATH}" `
+                "${_}"
+
+            if ("${env:CONFIGURATION}" -eq "Release") {
+                go tool go-licenses save "${_}" --save_path "${TEMP_PATH}\licenses"
+                Compress-Archive -Path "${TEMP_PATH}\*" -DestinationPath "${env:OUTPUT_PATH}\${Name}-${GOOS}-${GOARCH}.zip"
+            }
+        }}
+        Write-Output "::endgroup::"
+      shell: pwsh
+      env:
+        CONFIGURATION: ${{ inputs.configuration }}
+        OUTPUT_PATH: ${{ github.workspace }}\${{ inputs.output-dir }}
+
+    - name: Collect Licenses
+      if: ${{ inputs.configuration != 'Release' }}
+      run: |
+        Write-Output "::group::go tool go-licenses"
+        go tool go-licenses save ./... --save_path "${env:OUTPUT_PATH}"
+        Write-Output "::endgroup::"
+      shell: pwsh
+      env:
+        OUTPUT_PATH: ${{ github.workspace }}\${{ inputs.output-dir }}\licenses

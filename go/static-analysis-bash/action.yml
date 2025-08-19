@@ -1,0 +1,20 @@
+name: Static Analysis
+description: Run static analysis tools
+runs:
+  using: composite
+  steps:
+    - name: Check Format
+      run: |
+        echo "::group::go fmt"
+        go fmt ./...
+        echo "::endgroup::"
+
+        git diff --exit-code --quiet
+      shell: bash
+
+    - name: Check Lint
+      run: |
+        echo "::group::go tool staticcheck"
+        go tool staticcheck ./...
+        echo "::endgroup::"
+      shell: bash

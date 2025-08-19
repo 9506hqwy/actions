@@ -1,0 +1,72 @@
+name: Artifact
+description: Store build artifacts and documentation
+inputs:
+  configuration:
+    description: Configuration to archive
+    required: false
+    default: Debug
+  output-dir:
+    description: Directory to store artifacts
+    required: false
+    default: artifacts
+runs:
+  using: composite
+  steps:
+    - name: Generate Binaries
+      run: |
+        echo "::group::go build"
+        GOOS="$(go env GOOS)"
+        GOARCH="$(go env GOARCH)"
+
+        TARGETS=("./cmd" "./examples")
+        for DIR in "${TARGETS[@]}"
+        do
+            if [[ ! -d "${DIR}" ]]; then
+                continue
+            fi
+
+            for CMD in $(ls "${DIR}")
+            do
+                TEMP_PATH=""
+                BIN_PATH="${OUTPUT_PATH}/${CMD}"
+                if [[ "${CONFIGURATION}" == "Release" ]]; then
+                    TEMP_PATH="$(mktemp -d)"
+                    BIN_PATH="${TEMP_PATH}/${CMD}"
+                fi
+
+                go build \
+                    -trimpath \
+                    -ldflags "-s -w -X main.version=${GITHUB_REF_NAME#v} -X main.commit=${GITHUB_SHA}" \
+                    -o "${BIN_PATH}" \
+                    "${DIR}/${CMD}"
+
+                if [[ "${CONFIGURATION}" == "Release" ]]; then
+                    go tool go-licenses save "${DIR}/${CMD}" --save_path "${TEMP_PATH}/licenses"
+                    pushd "${TEMP_PATH}" || exit 1
+                        tar -zcf "${OUTPUT_PATH}/${CMD}-${GOOS}-${GOARCH}.tar.gz" -- *
+                    popd || exit 1
+                fi
+            done
+        done
+        echo "::endgroup::"
+      shell: bash
+      env:
+        CONFIGURATION: ${{ inputs.configuration }}
+        OUTPUT_PATH: ${{ github.workspace }}/${{ inputs.output-dir }}
+
+    - name: Generate Documentations
+      run: |
+        echo "::group::gen-docs"
+        ./scripts/gen-docs.sh
+        echo "::endgroup::"
+      shell: bash
+
+    - name: Collect Licenses
+      if: ${{ inputs.configuration != 'Release' }}
+      run: |
+        echo "::group::go tool go-licenses"
+        go tool go-licenses save ./... --save_path "${OUTPUT_PATH}"
+        echo "::endgroup::"
+      shell: bash
+      env:
+        OUTPUT_PATH: ${{ github.workspace }}/${{ inputs.output-dir }}/licenses

@@ -1,0 +1,56 @@
+name: Test
+description: Run test and report coverages
+inputs:
+  output-dir:
+    description: Directory to store coverage reports
+    required: false
+    default: artifacts
+runs:
+  using: composite
+  steps:
+    - name: Run Tests
+      id: test
+      run: |
+        echo "::group::go test"
+        COVERAGE_BIN="$(mktemp -d)/cover.out"
+        echo "coverage_bin=${COVERAGE_BIN}" >> "${GITHUB_OUTPUT}"
+
+        go test -v -cover -coverprofile "${COVERAGE_BIN}" ./...
+        echo "::endgroup::"
+      shell: bash
+
+    - name: Generate Coverage Summary Report
+      run: |
+        echo "::group::go tool cover"
+        go tool cover --func="${COVERAGE_BIN}" > "${OUTPUT_PATH}/Summary.txt"
+        echo "::endgroup::"
+
+        cat "${OUTPUT_PATH}/Summary.txt"
+        cat "${OUTPUT_PATH}/Summary.txt" > "${GITHUB_STEP_SUMMARY}"
+      shell: bash
+      env:
+        COVERAGE_BIN: ${{ steps.test.outputs.coverage_bin }}
+        OUTPUT_PATH: ${{ github.workspace }}/${{ inputs.output-dir }}
+
+    - name: Generate Coverage HTML Report
+      id: html
+      run: |
+        echo "::group::go tool cover"
+        OUTPUT_DIR=$(mktemp -d)
+        echo "coverage_path=${OUTPUT_DIR}" >> "${GITHUB_OUTPUT}"
+
+        go tool cover -html="${COVERAGE_BIN}" -o "${OUTPUT_DIR}/coverage.html"
+        echo "::endgroup::"
+      shell: bash
+      env:
+        COVERAGE_BIN: ${{ steps.test.outputs.coverage_bin }}
+
+    - name: Archive Coverage HTML Report
+      run: |
+        echo "::group::tar"
+        tar -zcf "${DOC_FILE_PATH}" -- *
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ steps.html.outputs.coverage_path }}
+      env:
+        DOC_FILE_PATH: ${{ github.workspace }}/${{ inputs.output-dir }}/coverage.tar.gz

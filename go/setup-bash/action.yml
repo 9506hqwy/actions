@@ -1,0 +1,28 @@
+name: Setup
+description: Setup the environment for the repository.
+outputs:
+  repository-name:
+    description: The name of the repository
+    value: ${{ steps.repository.outputs.name }}
+  go-target:
+    description: The Go target architecture and version
+    value: ${{ steps.repository.outputs.go_target }}
+runs:
+  using: composite
+  steps:
+    - name: Setup Repository Information
+      id: repository
+      run: |
+        echo "::group::setup repository information"
+        mkdir -p ./artifacts
+        echo "name=${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}" >> "${GITHUB_OUTPUT}"
+        echo "go_target=$(go env GOARCH)-$(go env GOOS)-$(go env GOVERSION)" >> "${GITHUB_OUTPUT}"
+        echo "::endgroup::"
+      shell: bash
+
+    - name: Download Modules
+      run: |
+        echo "::group::go mod download"
+        go mod download
+        echo "::endgroup::"
+      shell: bash

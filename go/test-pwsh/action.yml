@@ -1,0 +1,60 @@
+name: Test
+description: Run test and report coverages
+inputs:
+  output-dir:
+    description: Directory to store coverage reports
+    required: false
+    default: artifacts
+runs:
+  using: composite
+  steps:
+    - name: Run Tests
+      id: test
+      run: |
+        Write-Output "::group::go test"
+        $COVERAGE_DIR = Join-Path -Path ([IO.Path]::GetTempPath()) -ChildPath (New-Guid)
+        mkdir -p "${COVERAGE_DIR}"
+
+        $COVERAGE_BIN = "${COVERAGE_DIR}\cover.out"
+        Write-Output "coverage_bin=${COVERAGE_BIN}" >> "${env:GITHUB_OUTPUT}"
+
+        go test -v -cover -coverprofile "${COVERAGE_BIN}" ./...
+        Write-Output "::endgroup::"
+      shell: pwsh
+
+    - name: Generate Coverage Summary Report
+      run: |
+        Write-Output "::group::go tool cover"
+        go tool cover --func="${env:COVERAGE_BIN}" > "${env:OUTPUT_PATH}\Summary.txt"
+        Write-Output "::endgroup::"
+
+        Get-Content "${env:OUTPUT_PATH}\Summary.txt"
+        Get-Content "${env:OUTPUT_PATH}\Summary.txt" > "${env:GITHUB_STEP_SUMMARY}"
+      shell: pwsh
+      env:
+        COVERAGE_BIN: ${{ steps.test.outputs.coverage_bin }}
+        OUTPUT_PATH: ${{ github.workspace }}\${{ inputs.output-dir }}
+
+    - name: Generate Coverage HTML Report
+      id: html
+      run: |
+        Write-Output "::group::go tool cover"
+        $OUTPUT_DIR = Join-Path -Path ([IO.Path]::GetTempPath()) -ChildPath (New-Guid)
+        mkdir -p "${OUTPUT_DIR}"
+        Write-Output "coverage_path=${OUTPUT_DIR}" >> "${env:GITHUB_OUTPUT}"
+
+        go tool cover -html="${env:COVERAGE_BIN}" -o "${OUTPUT_DIR}\coverage.html"
+        Write-Output "::endgroup::"
+      shell: pwsh
+      env:
+        COVERAGE_BIN: ${{ steps.test.outputs.coverage_bin }}
+
+    - name: Archive Coverage HTML Report
+      run: |
+        Write-Output "::group::zip"
+        Compress-Archive -Path '*' -DestinationPath "${env:DOC_FILE_PATH}"
+        Write-Output "::endgroup::"
+      shell: pwsh
+      working-directory: ${{ steps.html.outputs.coverage_path }}
+      env:
+        DOC_FILE_PATH: ${{ github.workspace }}\${{ inputs.output-dir }}\coverage.zip
