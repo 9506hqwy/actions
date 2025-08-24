@@ -1,0 +1,142 @@
+name: Artifact
+description: Store build artifacts and documentation
+inputs:
+  configuration:
+    description: Configuration to archive
+    required: false
+    default: Debug
+  output-dir:
+    description: Directory to store artifacts
+    required: false
+    default: artifacts
+  doc-filename:
+    description: Filename for the documentation archive
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Generate Crates
+      run: |
+        echo "::group::cargo build"
+        cargo build --release --workspace --all-features --verbose
+        cargo build --release --workspace --all-features --examples --verbose
+        echo "::endgroup::"
+      shell: bash
+
+    - name: Generate Documentations
+      run: |
+        echo "::group::cargo doc"
+        cargo doc --workspace --all-features --verbose
+        echo "::endgroup::"
+      shell: bash
+
+    - name: Collect Licenses (normal)
+      if: ${{ inputs.configuration == 'Release' }}
+      run: |
+        echo "::group::cargo-licenses"
+        mkdir -p "${OUTPUT_PATH}"
+        ./tools/cargo-licenses.sh -o "${OUTPUT_PATH}" -e "normal"
+        echo "::endgroup::"
+      shell: bash
+      env:
+        OUTPUT_PATH: ${{ github.workspace }}/target/licenses
+
+    - name: Archive Licenses (normal)
+      if: ${{ inputs.configuration == 'Release' }}
+      run: |
+        echo "::group::tar"
+        tar -zcf "${GITHUB_WORKSPACE}/target/licenses.tar.gz" -- *
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ github.workspace }}/target/licenses
+
+    - name: Collect Licenses (dev)
+      if: ${{ inputs.configuration == 'Release' }}
+      run: |
+        echo "::group::cargo-licenses"
+        mkdir -p "${OUTPUT_PATH}"
+        ./tools/cargo-licenses.sh -o "${OUTPUT_PATH}" -e "normal,dev"
+        echo "::endgroup::"
+      shell: bash
+      env:
+        OUTPUT_PATH: ${{ github.workspace }}/target/licenses-dev
+
+    - name: Archive Licenses (dev)
+      if: ${{ inputs.configuration == 'Release' }}
+      run: |
+        echo "::group::tar"
+        tar -zcf "${GITHUB_WORKSPACE}/target/licenses-dev.tar.gz" -- *
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ github.workspace }}/target/licenses-dev
+
+    - name: Archive Crates
+      run: |
+        echo "::group::tar"
+        HOST_TUPLE="$(rustc --print host-tuple)"
+        mapfile -t FILES < <(find . -maxdepth 1 -type f \( -name '*.so' -o -name '*.a' -o -executable \) -exec basename {} \;)
+        if [[ -n $FILES ]] ; then
+            if [[ "${CONFIGURATION}" == "Release" ]]; then
+                cp -f "${GITHUB_WORKSPACE}/target/licenses.tar.gz" .
+                FILES+=("licenses.tar.gz")
+            fi
+
+            tar -zcf "${OUTPUT_PATH}/${HOST_TUPLE}.tar.gz" "${FILES[@]}"
+        fi
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ github.workspace }}/target/release
+      env:
+        CONFIGURATION: ${{ inputs.configuration }}
+        OUTPUT_PATH: ${{ github.workspace }}/${{ inputs.output-dir }}
+
+    - name: Archive Examples
+      run: |
+        echo "::group::tar"
+
+        if [[ "${CONFIGURATION}" == "Release" ]]; then
+            cp -f "${GITHUB_WORKSPACE}/target/licenses-dev.tar.gz" .
+        fi
+
+        HOST_TUPLE="$(rustc --print host-tuple)"
+        mapfile -t EXAMPLES < <(find . -type f -executable)
+        for EXAMPLE in "${EXAMPLES[@]}"
+        do
+            BASE_NAME=$(basename "${EXAMPLE}")
+            if [[ ! ${BASE_NAME} =~ -[a-fA-F0-9]{16}$ ]] ; then
+                FILES=("${BASE_NAME}")
+                if [[ "${CONFIGURATION}" == "Release" ]]; then
+                    FILES+=("licenses-dev.tar.gz")
+                fi
+
+                tar -zcf "${OUTPUT_PATH}/${BASE_NAME}-${HOST_TUPLE}.tar.gz" "${FILES[@]}"
+            fi
+        done
+
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ github.workspace }}/target/release/examples
+      env:
+        CONFIGURATION: ${{ inputs.configuration }}
+        OUTPUT_PATH: ${{ github.workspace }}/${{ inputs.output-dir }}
+
+    - name: Archive Documentations
+      run: |
+        echo "::group::tar"
+        tar -zcf "${DOC_FILE_PATH}" -- *
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ github.workspace }}/target/doc
+      env:
+        DOC_FILE_PATH: ${{ github.workspace }}/${{ inputs.output-dir }}/${{ inputs.doc-filename }}
+
+    - name: Collect Licenses
+      if: ${{ inputs.configuration != 'Release' }}
+      run: |
+        echo "::group::cargo-licenses"
+        mkdir -p "${OUTPUT_PATH}"
+        ./tools/cargo-licenses.sh -o "${OUTPUT_PATH}"
+        echo "::endgroup::"
+      shell: bash
+      env:
+        OUTPUT_PATH: ${{ github.workspace }}/${{ inputs.output-dir }}/licenses

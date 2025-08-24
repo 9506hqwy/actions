@@ -1,0 +1,21 @@
+name: Setup
+description: Setup the environment for the repository.
+outputs:
+  repository-name:
+    description: The name of the repository
+    value: ${{ steps.repository.outputs.name }}
+  rust-target:
+    description: The Rust target architecture and version
+    value: ${{ steps.repository.outputs.rust_target }}
+runs:
+  using: composite
+  steps:
+    - name: Setup Repository Information
+      id: repository
+      run: |
+        echo "::group::setup repository information"
+        mkdir -p ./artifacts
+        echo "name=${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}" >> "${GITHUB_OUTPUT}"
+        echo "rust_target=$(rustc --print host-tuple)-$(rustc --version | cut -d ' ' -f 2)" >> "${GITHUB_OUTPUT}"
+        echo "::endgroup::"
+      shell: bash

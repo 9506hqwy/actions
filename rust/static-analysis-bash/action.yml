@@ -1,0 +1,20 @@
+name: Static Analysis
+description: Run static analysis tools
+runs:
+  using: composite
+  steps:
+    - name: Check Format
+      run: |
+        echo "::group::cargo fmt"
+        cargo fmt --all --check
+        echo "::endgroup::"
+      shell: bash
+
+    - name: Check Lint
+      run: |
+        echo "::group::cargo clippy"
+        cargo clippy --fix
+        echo "::endgroup::"
+
+        git diff --exit-code --quiet
+      shell: bash

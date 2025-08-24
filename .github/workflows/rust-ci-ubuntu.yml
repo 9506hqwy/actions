@@ -1,0 +1,48 @@
+name: Rust CI Ubuntu
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v5
+
+    - name: Setup
+      id: setup
+      uses: 9506hqwy/actions/rust/setup-bash@main
+
+    - name: Check Format
+      uses: 9506hqwy/actions/rust/static-analysis-bash@main
+
+    - name: Run Tests
+      uses: 9506hqwy/actions/rust/test-bash@main
+      with:
+        output-dir: artifacts
+
+    - name: Generate Artifact
+      uses: 9506hqwy/actions/rust/artifact-bash@main
+      with:
+        output-dir: artifacts
+        doc-filename: help-${{ steps.setup.outputs.rust-target }}.tar.gz
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.setup.outputs.repository-name }}-${{ github.workflow }}-${{ steps.setup.outputs.rust-target }}-${{ github.run_number }}
+        path: ${{ github.workspace }}/artifacts/
+        retention-days: 1

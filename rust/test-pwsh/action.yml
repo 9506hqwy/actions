@@ -1,0 +1,104 @@
+name: Test
+description: Run test and report coverages
+inputs:
+  output-dir:
+    description: Directory to store coverage reports
+    required: false
+    default: artifacts
+runs:
+  using: composite
+  steps:
+    - name: Run Tests
+      run: |
+        Write-Output "::group::cargo test"
+        cargo test --verbose
+        Write-Output "::endgroup::"
+      shell: pwsh
+      env:
+        RUSTFLAGS: '-C instrument-coverage'
+        LLVM_PROFILE_FILE: '${{ github.workspace }}\target\profiles\default_%m_%p.profraw'
+
+    - name: Install LLVM
+      run: |
+        Write-Output "::group::rustup component add"
+        rustup component add llvm-tools
+        Write-Output "::endgroup::"
+      shell: pwsh
+
+    - name: Collect Coverage
+      id: coverage
+      run: |
+        Write-Output "::group::llvm-profdata"
+
+        $HOST_TUPLE = "$(rustc --print host-tuple)"
+        $TEST_BIN = ($(cargo test --no-run 2>&1) |? { "$_" -like '*Executable*' }) -replace '.*\((?<path>.*)\).*', '${path}'
+        $OBJECT_ARGS = @($TEST_BIN) |% { "--object=$_" }
+
+        $profiles = @(Get-ChildItem -Path "${env:LLVM_PROFILE_PATH}\default_*.profraw" -Recurse)
+
+        $env:PATH ="$(rustc --print sysroot)\lib\rustlib\${HOST_TUPLE}\bin;${env:PATH}"
+
+        llvm-profdata.exe merge `
+            --sparse `
+            --output="${env:LLVM_PROFILE_PATH}\default.profdata" `
+            @($profiles |% { $_.FullName })
+
+        llvm-cov.exe export `
+            --ignore-filename-regex='library\std\src' `
+            --ignore-filename-regex='cargo\registry\src' `
+            ${OBJECT_ARGS} `
+            --instr-profile="${env:LLVM_PROFILE_PATH}\default.profdata" `
+            --format=lcov `
+            > "${env:LLVM_PROFILE_PATH}\coverage.lcov"
+
+        Write-Output "coverage_bin=${env:LLVM_PROFILE_PATH}\coverage.lcov" >> "${env:GITHUB_OUTPUT}"
+
+        Write-Output "::endgroup::"
+      shell: pwsh
+      env:
+        RUSTFLAGS: '-C instrument-coverage'
+        LLVM_PROFILE_PATH: '${{ github.workspace }}\target\profiles'
+
+    - name: Install ReportGenerator
+      run: |
+        Write-Output "::group::dotnet tool install"
+        dotnet tool install -g dotnet-reportgenerator-globaltool
+        Write-Output "::endgroup::"
+      shell: pwsh
+
+    - name: Generate Coverage Summary Report
+      run: |
+        Write-Output "::group::reportgenerator summary"
+        reportgenerator -reports:"${env:COVERAGE_BIN}" -targetdir:"${env:OUTPUT_PATH}" -reporttypes:"MarkdownSummaryGithub;TextSummary"
+        Write-Output "::endgroup::"
+
+        Get-Content "${env:OUTPUT_PATH}\Summary.txt"
+        Get-Content "${env:OUTPUT_PATH}\SummaryGithub.md" > "${env:GITHUB_STEP_SUMMARY}"
+      shell: pwsh
+      env:
+        COVERAGE_BIN: ${{ steps.coverage.outputs.coverage_bin }}
+        OUTPUT_PATH: ${{ github.workspace }}\${{ inputs.output-dir }}
+
+    - name: Generate Coverage HTML Report
+      id: html
+      run: |
+        Write-Output "::group::reportgenerator html"
+        $OUTPUT_DIR = Join-Path -Path ([IO.Path]::GetTempPath()) -ChildPath (New-Guid)
+        mkdir -p "${OUTPUT_DIR}"
+        Write-Output "coverage_path=${OUTPUT_DIR}" >> "${env:GITHUB_OUTPUT}"
+
+        reportgenerator -reports:"${env:COVERAGE_BIN}" -targetdir:"${OUTPUT_DIR}" -reporttypes:"Html"
+        Write-Output "::endgroup::"
+      shell: pwsh
+      env:
+        COVERAGE_BIN: ${{ steps.coverage.outputs.coverage_bin }}
+
+    - name: Archive Coverage HTML Report
+      run: |
+        Write-Output "::group::zip"
+        Compress-Archive -Path '*' -DestinationPath "${env:DOC_FILE_PATH}"
+        Write-Output "::endgroup::"
+      shell: pwsh
+      working-directory: ${{ steps.html.outputs.coverage_path }}
+      env:
+        DOC_FILE_PATH: ${{ github.workspace }}\${{ inputs.output-dir }}\coverage.zip
