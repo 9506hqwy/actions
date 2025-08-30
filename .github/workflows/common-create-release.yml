@@ -1,0 +1,41 @@
+name: Create Release
+
+on:
+  workflow_call:
+    inputs:
+      title-prefix:
+        description: Prefix for the release title
+        default: ''
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v5
+
+    - uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Create Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TITLE_PREFIX: ${{ inputs.title-prefix }}
+      run: |
+        gh config set prompt disabled
+        gh release create "${GITHUB_REF_NAME}" ./artifacts/*/* -t "${TITLE_PREFIX}${GITHUB_REF_NAME}" -d
