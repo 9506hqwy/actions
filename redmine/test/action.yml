@@ -1,0 +1,38 @@
+name: Test
+description: Run test and report coverages
+inputs:
+  working-directory:
+    description: The working directory to run.
+    required: true
+  plugin-name:
+    description: The name of the plugin.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Run Tests
+      run: |
+        echo "::group::ruke test"
+        if [[ ${REDMINE_VERSION} =~ ^4\.0\. ]] ; then
+            # "\xC5" from ASCII-8BIT to UTF-8 (Encoding::UndefinedConversionError)
+            # https://www.redmine.org/issues/30963
+            unset COVERAGE
+        fi
+
+        # skip db:test:prepare
+        bundle exec rake test TEST="plugins/${PLUGIN_NAME}/test/**/*_test.rb"
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        PLUGIN_NAME: ${{ inputs.plugin-name }}
+
+    - name: Generate Coverage Report
+      run: |
+        echo "::group::tar"
+        if find . -maxdepth 0 -type d ! -empty | grep -q .; then
+            tar -zcf "${GITHUB_WORKSPACE}/artifacts/coverage.tar.gz" -- *
+        fi
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}/coverage

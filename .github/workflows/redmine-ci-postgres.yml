@@ -1,0 +1,78 @@
+name: Redmine CI PostgreSQL
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    env:
+      REDMINE_HOME: /usr/src/redmine
+      RAILS_ENV: test
+      COVERAGE: 1
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['4.0', '4.1', '4.2', '5.0', '5.1', '6.0']
+
+    services:
+      database:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: redmine
+          POSTGRES_PASSWORD: password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    container:
+      image: redmine:${{ matrix.version }}
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v5
+
+    - name: Setup Database Configuration
+      uses: 9506hqwy/actions/redmine/setup-db-postgres@main
+      with:
+        working-directory: ${{ env.REDMINE_HOME }}
+
+    - name: Setup Repository Information
+      id: setup
+      uses: 9506hqwy/actions/redmine/setup@main
+
+    - name: Setup Plugin
+      uses: 9506hqwy/actions/redmine/setup-plugin@main
+      with:
+        working-directory: ${{ env.REDMINE_HOME }}
+        plugin-name: ${{ steps.setup.outputs.repository-name }}
+
+    - name: Initialize Environments
+      uses: 9506hqwy/actions/redmine/init-db@main
+      with:
+        working-directory: ${{ env.REDMINE_HOME }}
+
+    - name: Check Format
+      if: matrix.version == '4.2'
+      uses: 9506hqwy/actions/redmine/static-analysis@main
+      with:
+        working-directory: ${{ env.REDMINE_HOME }}
+        plugin-name: ${{ steps.setup.outputs.repository-name }}
+
+    - name: Run Tests
+      uses: 9506hqwy/actions/redmine/test@main
+      with:
+        working-directory: ${{ env.REDMINE_HOME }}
+        plugin-name: ${{ steps.setup.outputs.repository-name }}

@@ -1,0 +1,22 @@
+name: Static Analysis
+description: Run static analysis tools
+inputs:
+  working-directory:
+    description: The working directory to run.
+    required: true
+  plugin-name:
+    description: The name of the plugin.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Check Format
+      run: |
+        echo "::group::rubocop"
+        mapfile -t FILES < <(find -L "plugins/${PLUGIN_NAME}" -name '*.rb')
+        bundle exec rubocop "${FILES[@]}"
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        PLUGIN_NAME: ${{ inputs.plugin-name }}

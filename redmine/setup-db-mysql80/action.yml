@@ -1,0 +1,28 @@
+name: Setup Database Configuration
+description: Setup database configuration for MySQL 8.0.
+inputs:
+  working-directory:
+    description: The working directory to run.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Setup Database Configuration
+      run: |
+        echo "::group::setup database configuration"
+        cat > config/database.yml <<EOF
+        test:
+          adapter: "mysql2"
+          host: "database"
+          port: 3306
+          username: "redmine"
+          password: "password"
+          database: "redmine"
+          encoding: "utf8mb4"
+          variables:
+            # https://www.redmine.org/issues/39437
+            transaction_isolation: "READ-COMMITTED"
+        EOF
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}

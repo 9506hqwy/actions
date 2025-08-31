@@ -1,0 +1,25 @@
+name: Setup Database Configuration
+description: Setup database configuration for PostgreSQL.
+inputs:
+  working-directory:
+    description: The working directory to run.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Setup Database Configuration
+      run: |
+        echo "::group::setup database configuration"
+        cat > config/database.yml <<EOF
+        test:
+          adapter: "postgresql"
+          host: "database"
+          port: 5432
+          username: "redmine"
+          password: "password"
+          database: "redmine"
+          encoding: "utf8"
+        EOF
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}

@@ -1,0 +1,45 @@
+name: Playwright
+description: Run Playwright tests
+inputs:
+  working-directory:
+    description: The working directory to run.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Start Redmine Server
+      run: |
+        echo "::group::rails server"
+        bundle exec rails server --daemon --pid=./tmp/pids/server.pid
+        sleep 5
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+
+    - name: Run Playwright
+      run: |
+        echo "::group::npx playwright test"
+        # shellcheck source=/dev/fd/xx
+        source <(fnm env --shell bash)
+
+        npx playwright test --reporter list --project initialize
+
+        # Occurs below at all browser accidentally.
+        # https://github.com/microsoft/playwright/issues/27997
+        set +e
+        npx playwright test --reporter list --workers 1 --project "chromium test"
+        npx playwright test --reporter list --workers 1 --project "firefox test"
+        npx playwright test --reporter list --workers 1 --project "webkit test"
+        set -e
+        echo "::endgroup::"
+      shell: bash
+      env:
+        HOME: /root
+
+    - name: Stop Redmine Server
+      run: |
+        echo "::group::kill"
+        kill "$(cat ./tmp/pids/server.pid)"
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}

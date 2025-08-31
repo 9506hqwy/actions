@@ -1,0 +1,39 @@
+name: Setup Playwright
+description: Install Playwright and its dependencies.
+runs:
+  using: composite
+  steps:
+    - name: Install fnm
+      run: |
+        echo "::group::install fnm"
+        curl -o- https://fnm.vercel.app/install | bash
+        echo "$HOME/.local/share/fnm" >> "${GITHUB_PATH}"
+        echo "::endgroup::"
+      shell: bash
+      env:
+        # https://github.com/microsoft/playwright/issues/27620
+        HOME: /root
+
+    - name: Install Node.js
+      run: |
+        echo "::group::fnm install"
+        # shellcheck source=/dev/fd/xx
+        source <(fnm env --shell bash)
+        fnm install 22
+        echo "::endgroup::"
+      shell: bash
+      env:
+        HOME: /root
+
+    - name: Install Playwright
+      run: |
+        echo "::group::npx playwright install"
+        # shellcheck source=/dev/fd/xx
+        source <(fnm env --shell bash)
+        npm install
+        npx playwright install-deps
+        npx playwright install
+        echo "::endgroup::"
+      shell: bash
+      env:
+        HOME: /root

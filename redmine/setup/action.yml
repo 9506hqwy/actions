@@ -1,0 +1,28 @@
+name: Setup
+description: Setup the environment for the repository.
+outputs:
+  repository-name:
+    description: The name of the repository
+    value: ${{ steps.repository.outputs.name }}
+  ruby-version:
+    description: The Ruby version
+    value: ${{ steps.repository.outputs.ruby-version }}
+  redmine-version:
+    description: The Redmine version
+    value: ${{ steps.repository.outputs.redmine-version }}
+runs:
+  using: composite
+  steps:
+    - name: Setup Repository Information
+      id: repository
+      run: |
+        echo "::group::setup repository information"
+        mkdir -p ./artifacts
+        mkdir -p "${REDMINE_HOME}/coverage"
+        {
+            echo "name=${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}"
+            echo "ruby-version=${RUBY_VERSION}"
+            echo "redmine-version=${REDMINE_VERSION}"
+        } >> "${GITHUB_OUTPUT}"
+        echo "::endgroup::"
+      shell: bash
