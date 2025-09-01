@@ -32,6 +32,18 @@ runs:
         PLUGIN_DIR: ${{ github.workspace }}
         PLUGIN_NAME: ${{ inputs.plugin-name }}
 
+    - name: Install Extension Plugins
+      run: |
+        echo "::group::install extension plugin"
+        if [[ -f "${PLUGIN_DIR}/.github/workflows/install-extension-plugins.sh" ]]; then
+            bash "${PLUGIN_DIR}/.github/workflows/install-extension-plugins.sh"
+        fi
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}/plugins
+      env:
+        PLUGIN_DIR: ${{ github.workspace }}
+
     - name: Install Dependencies
       run: |
         echo "::group::bundle install"
