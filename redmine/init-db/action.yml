@@ -13,6 +13,13 @@ runs:
         bundle exec rake db:drop
         bundle exec rake db:create db:migrate redmine:plugins:migrate
         echo ja | bundle exec rake redmine:load_default_data
+
+        if [[ ${REDMINE_VERSION} =~ ^4\. ]] ; then
+            if grep -q 'mysql2' config/database.yml; then
+                # for MySQL and Redmine4.x only, why?
+                bundle exec rake db:test:prepare
+            fi
+        fi
         echo "::endgroup::"
 
         bundle exec rails about
