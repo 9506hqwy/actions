@@ -7,6 +7,17 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Build JavaScript Assets
+      run: |
+        echo "::group::build javascript assets"
+        if [[ -f "${PLUGIN_DIR}/.github/workflows/build-javascript-assets.sh" ]]; then
+            bash "${PLUGIN_DIR}/.github/workflows/build-javascript-assets.sh"
+        fi
+        echo "::endgroup::"
+      shell: bash
+      env:
+        PLUGIN_DIR: ${{ github.workspace }}
+
     - name: Start Redmine Server
       run: |
         echo "::group::rails server"
