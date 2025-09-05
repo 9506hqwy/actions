@@ -2,6 +2,13 @@ name: Redmine CI MySQL 5.7
 
 on:
   workflow_call:
+    inputs:
+      # https://github.com/orgs/community/discussions/11692
+      redmine-versions:
+        description: Redmine versions to test
+        default: '["4.0", "4.1", "4.2", "5.0"]'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -23,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ['4.0', '4.1', '4.2', '5.0']
+        version: ${{ fromJSON(inputs.redmine-versions) }}
 
     services:
       database:

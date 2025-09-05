@@ -2,6 +2,13 @@ name: Redmine CI SQLite3
 
 on:
   workflow_call:
+    inputs:
+      # https://github.com/orgs/community/discussions/11692
+      redmine-versions:
+        description: Redmine versions to test
+        default: '["4.0", "4.1", "4.2", "5.0", "5.1", "6.0"]'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -23,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ['4.0', '4.1', '4.2', '5.0', '5.1', '6.0']
+        version: ${{ fromJSON(inputs.redmine-versions) }}
 
     container:
       image: redmine:${{ matrix.version }}
