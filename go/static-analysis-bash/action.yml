@@ -1,5 +1,10 @@
 name: Static Analysis
 description: Run static analysis tools
+inputs:
+  enable-lint:
+    description: Whether to enable linting (1 to enable, 0 to disable)
+    required: false
+    default: 1
 runs:
   using: composite
   steps:
@@ -13,6 +18,7 @@ runs:
       shell: bash
 
     - name: Check Lint
+      if: ${{ inputs.enable-lint != '0' }}
       run: |
         echo "::group::go tool staticcheck"
         go tool staticcheck ./...

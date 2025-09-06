@@ -2,6 +2,12 @@ name: Go CI Ubuntu
 
 on:
   workflow_call:
+    inputs:
+      enable-lint:
+        description: Whether to enable linting (1 to enable, 0 to disable)
+        default: '1'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -25,6 +31,8 @@ jobs:
 
     - name: Check Format
       uses: 9506hqwy/actions/go/static-analysis-bash@main
+      with:
+        enable-lint: ${{ inputs.enable-lint }}
 
     - name: Run Tests
       uses: 9506hqwy/actions/go/test-bash@main
