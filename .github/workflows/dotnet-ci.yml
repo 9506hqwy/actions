@@ -2,6 +2,12 @@ name: dotnet CI
 
 on:
   workflow_call:
+    inputs:
+      enable-test:
+        description: Whether to enable tests (1 to enable, 0 to disable)
+        default: '1'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -35,6 +41,7 @@ jobs:
       uses: 9506hqwy/actions/dotnet/static-analysis@main
 
     - name: Run Tests
+      if: ${{ inputs.enable-test != '0' }}
       uses: 9506hqwy/actions/dotnet/test@main
       with:
         output-dir: artifacts
