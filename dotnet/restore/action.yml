@@ -3,6 +3,18 @@ description: Restore project dependencies
 runs:
   using: composite
   steps:
+    - name: Add Extra Dependencies
+      run: |
+        echo "::group::dotnet nuget add source"
+        if [[ -f "${GITHUB_WORKSPACE}/.github/workflows/resolve-extra-dependencies.sh" ]]; then
+            LOCALPKG="$(mktemp -d)"
+            export LOCALPKG
+            bash "${GITHUB_WORKSPACE}/.github/workflows/resolve-extra-dependencies.sh"
+            dotnet nuget add source --name local "${LOCALPKG}"
+        fi
+        echo "::endgroup::"
+      shell: bash
+
     - name: Restore Dependencies
       run: |
         echo "::group::dotnet restore"
