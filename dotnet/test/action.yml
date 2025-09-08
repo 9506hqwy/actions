@@ -5,6 +5,10 @@ inputs:
     description: Directory to store coverage reports
     required: false
     default: artifacts
+  html-report-format:
+    description: Format of HTML report (e.g. Html, HtmlSummary, Cobertura, etc)
+    required: false
+    default: Html
 runs:
   using: composite
   steps:
@@ -46,11 +50,12 @@ runs:
         OUTPUT_DIR=$(mktemp -d)
         echo "coverage_path=${OUTPUT_DIR}" >> "${GITHUB_OUTPUT}"
 
-        reportgenerator -reports:"${COVERAGE_PATH}/*/coverage.cobertura.xml" -targetdir:"${OUTPUT_DIR}" -reporttypes:"Html"
+        reportgenerator -reports:"${COVERAGE_PATH}/*/coverage.cobertura.xml" -targetdir:"${OUTPUT_DIR}" -reporttypes:"${REPORT_FORMAT}"
         echo "::endgroup::"
       shell: bash
       env:
         COVERAGE_PATH: ${{ steps.test.outputs.coverage_path }}
+        REPORT_FORMAT: ${{ inputs.html-report-format }}
 
     - name: Archive Coverage HTML Report
       run: |

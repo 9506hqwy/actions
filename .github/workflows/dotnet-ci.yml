@@ -8,6 +8,11 @@ on:
         default: '1'
         required: false
         type: string
+      html-report-format:
+        description: Format of HTML report (e.g. Html, HtmlSummary, Cobertura, etc)
+        default: Html
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -45,6 +50,7 @@ jobs:
       uses: 9506hqwy/actions/dotnet/test@main
       with:
         output-dir: artifacts
+        html-report-format: ${{ inputs.html-report-format }}
 
     - name: Build Release
       uses: 9506hqwy/actions/dotnet/build@main
