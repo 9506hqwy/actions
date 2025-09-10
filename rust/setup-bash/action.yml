@@ -19,3 +19,12 @@ runs:
         echo "rust_target=$(rustc --print host-tuple)-$(rustc --version | cut -d ' ' -f 2)" >> "${GITHUB_OUTPUT}"
         echo "::endgroup::"
       shell: bash
+
+    - name: Install Extra Dependencies
+      run: |
+        echo "::group::install extra dependencies"
+        if [[ -f "${GITHUB_WORKSPACE}/.github/workflows/install-extra-dependencies.sh" ]]; then
+            bash "${GITHUB_WORKSPACE}/.github/workflows/install-extra-dependencies.sh"
+        fi
+        echo "::endgroup::"
+      shell: bash
