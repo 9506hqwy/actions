@@ -26,7 +26,7 @@ runs:
     - name: Generate Documentations
       run: |
         Write-Output "::group::cargo doc"
-        cargo doc --workspace --all-features --verbose
+        cargo doc --no-deps --workspace --all-features --verbose
         Write-Output "::endgroup::"
       shell: pwsh
 
