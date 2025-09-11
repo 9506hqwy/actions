@@ -44,8 +44,8 @@ runs:
             @($profiles |% { $_.FullName })
 
         llvm-cov.exe export `
-            --ignore-filename-regex='library\std\src' `
-            --ignore-filename-regex='cargo\registry\src' `
+            --ignore-filename-regex='library\\std\\src' `
+            --ignore-filename-regex='cargo\\registry\\src' `
             ${OBJECT_ARGS} `
             --instr-profile="${env:LLVM_PROFILE_PATH}\default.profdata" `
             --format=lcov `
