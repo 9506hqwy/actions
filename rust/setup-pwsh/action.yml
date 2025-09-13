@@ -22,3 +22,12 @@ runs:
         Write-Output "rust_target=${RUST_TARGET}" >> "${env:GITHUB_OUTPUT}"
         Write-Output "::endgroup::"
       shell: pwsh
+
+    - name: Install Extra Dependencies
+      run: |
+        Write-Output "::group::install extra dependencies"
+        if (Test-Path -Path "${env:GITHUB_WORKSPACE}\.github\workflows\install-extra-dependencies.ps1") {
+            & "${env:GITHUB_WORKSPACE}\.github\workflows\install-extra-dependencies.ps1"
+        }
+        Write-Output "::endgroup::"
+      shell: pwsh
