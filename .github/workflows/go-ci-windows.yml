@@ -2,6 +2,12 @@ name: Go CI Windows
 
 on:
   workflow_call:
+    inputs:
+      use-submodules:
+        description: Whether to use submodules
+        default: false
+        required: false
+        type: boolean
 
 permissions:
   contents: read
@@ -18,6 +24,8 @@ jobs:
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v5
+      with:
+        submodules: ${{ inputs.use-submodules }}
 
     - name: Setup
       id: setup

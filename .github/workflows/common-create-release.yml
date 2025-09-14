@@ -8,6 +8,11 @@ on:
         default: ''
         required: false
         type: string
+      use-submodules:
+        description: Whether to use submodules
+        default: false
+        required: false
+        type: boolean
 
 permissions:
   contents: read
@@ -27,6 +32,8 @@ jobs:
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v5
+      with:
+        submodules: ${{ inputs.use-submodules }}
 
     - uses: actions/download-artifact@v5
       with:

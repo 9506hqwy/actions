@@ -9,6 +9,11 @@ on:
         default: '["5.1", "6.0"]'
         required: false
         type: string
+      use-submodules:
+        description: Whether to use submodules
+        default: false
+        required: false
+        type: boolean
 
 permissions:
   contents: read
@@ -52,6 +57,8 @@ jobs:
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v5
+      with:
+        submodules: ${{ inputs.use-submodules }}
 
     - name: Setup Database Configuration
       uses: 9506hqwy/actions/redmine/setup-db-mysql80@main
