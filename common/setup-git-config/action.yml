@@ -1,0 +1,11 @@
+name: Setup Git Global Config
+description: Setup global git configuration
+runs:
+  using: composite
+  steps:
+    - name: Setup Git Global Config
+      run: |
+        echo "::group::git config --global"
+        git config --global core.autocrlf false
+        echo "::endgroup::"
+      shell: bash

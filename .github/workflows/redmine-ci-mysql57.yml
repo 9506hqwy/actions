@@ -55,6 +55,9 @@ jobs:
       image: redmine:${{ matrix.version }}
 
     steps:
+    - name: Setup Git Global Config
+      uses: 9506hqwy/actions/common/setup-git-config@main
+
     - name: Checkout Source Code
       uses: actions/checkout@v5
       with:
