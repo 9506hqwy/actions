@@ -3,6 +3,11 @@ name: Rust CI Ubuntu
 on:
   workflow_call:
     inputs:
+      enable-lint:
+        description: Whether to enable linting (1 to enable, 0 to disable)
+        default: '1'
+        required: false
+        type: string
       use-submodules:
         description: Whether to use submodules
         default: false
@@ -39,6 +44,8 @@ jobs:
 
     - name: Check Format
       uses: 9506hqwy/actions/rust/static-analysis-bash@main
+      with:
+        enable-lint: ${{ inputs.enable-lint }}
 
     - name: Run Tests
       uses: 9506hqwy/actions/rust/test-bash@main
