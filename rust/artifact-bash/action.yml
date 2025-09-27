@@ -23,15 +23,33 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Set Output Directory
+      id: set-output-directory
+      run: |
+        echo "::group::set output directory"
+        echo "crates=${CONFIGURATION,,}" >> "${GITHUB_OUTPUT}"
+        echo "::endgroup::"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        CONFIGURATION: ${{ inputs.configuration }}
+
     - name: Generate Crates
       if: ${{ inputs.enable-crate-generation != '0' }}
       run: |
         echo "::group::cargo build"
-        cargo build --release --workspace --all-features --verbose
-        cargo build --release --workspace --all-features --examples --verbose
+        if [[ "${CONFIGURATION}" == "Release" ]]; then
+          cargo build --release --workspace --all-features --verbose
+          cargo build --release --workspace --all-features --examples --verbose
+        else
+          cargo build --workspace --all-features --verbose
+          cargo build --workspace --all-features --examples --verbose
+        fi
         echo "::endgroup::"
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+      env:
+        CONFIGURATION: ${{ inputs.configuration }}
 
     - name: Generate Documentations
       run: |
@@ -102,7 +120,7 @@ runs:
         fi
         echo "::endgroup::"
       shell: bash
-      working-directory: ${{ inputs.working-directory }}/target/release
+      working-directory: ${{ inputs.working-directory }}/target/${{ steps.set-output-directory.outputs.crates }}
       env:
         CONFIGURATION: ${{ inputs.configuration }}
         LICENSE_PATH: ${{ inputs.working-directory }}/target/licenses.tar.gz
@@ -133,7 +151,7 @@ runs:
 
         echo "::endgroup::"
       shell: bash
-      working-directory: ${{ inputs.working-directory }}/target/release/examples
+      working-directory: ${{ inputs.working-directory }}/target/${{ steps.set-output-directory.outputs.crates }}/examples
       env:
         CONFIGURATION: ${{ inputs.configuration }}
         LICENSE_PATH: ${{ inputs.working-directory }}/target/licenses-dev.tar.gz
