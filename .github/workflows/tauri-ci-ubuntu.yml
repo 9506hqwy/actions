@@ -38,6 +38,23 @@ jobs:
       with:
         submodules: ${{ inputs.use-submodules }}
 
+    - name: Install Dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y \
+            build-essential \
+            curl \
+            file \
+            librsvg2-dev \
+            libssl-dev \
+            libwebkit2gtk-4.1-dev \
+            libxdo-dev \
+            libayatana-appindicator3-dev \
+            wget
+
+    - name: Install npm Modules
+      run: npm install
+
     - name: Setup
       id: setup
       uses: 9506hqwy/actions/rust/setup-bash@main
@@ -63,7 +80,7 @@ jobs:
         working-directory: ${{ github.workspace }}/src-tauri
 
     - name: Create Artifacts
-      run: cargo tauri build --debug
+      run: npm run tauri build -- --debug
 
     - name: Generate Artifact
       uses: 9506hqwy/actions/rust/artifact-bash@main

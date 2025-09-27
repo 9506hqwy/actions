@@ -33,6 +33,9 @@ jobs:
       with:
         submodules: ${{ inputs.use-submodules }}
 
+    - name: Install npm Modules
+      run: npm install
+
     - name: Setup
       id: setup
       uses: 9506hqwy/actions/rust/setup-pwsh@main
@@ -46,7 +49,7 @@ jobs:
         working-directory: ${{ github.workspace }}\src-tauri
 
     - name: Create Artifacts
-      run: cargo tauri build --debug
+      run: npm run tauri build -- --debug
 
     - name: Generate Artifact
       uses: 9506hqwy/actions/rust/artifact-pwsh@main
