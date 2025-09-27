@@ -47,7 +47,7 @@ runs:
         llvm-profdata.exe merge `
             --sparse `
             --output="${env:LLVM_PROFILE_PATH}\default.profdata" `
-            @($profiles |% { $_.FullName })
+            @($profiles |% { Resolve-Path $_ -Relative })
 
         llvm-cov.exe export `
             --ignore-filename-regex='library\\std\\src' `
