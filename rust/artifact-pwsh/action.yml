@@ -12,6 +12,10 @@ inputs:
   doc-filename:
     description: Filename for the documentation archive
     required: true
+  working-directory:
+    description: Directory to work
+    required: false
+    default: ${{ github.workspace }}
 runs:
   using: composite
   steps:
@@ -22,6 +26,7 @@ runs:
         cargo build --release --workspace --all-features --examples --verbose
         Write-Output "::endgroup::"
       shell: pwsh
+      working-directory: ${{ inputs.working-directory }}
 
     - name: Generate Documentations
       run: |
@@ -29,46 +34,53 @@ runs:
         cargo doc --no-deps --workspace --all-features --verbose
         Write-Output "::endgroup::"
       shell: pwsh
+      working-directory: ${{ inputs.working-directory }}
 
     - name: Collect Licenses (normal)
       if: ${{ inputs.configuration == 'Release' }}
       run: |
         echo "::group::cargo-licenses"
         mkdir -p "${OUTPUT_PATH}"
-        ./tools/cargo-licenses.sh -o "${OUTPUT_PATH}" -e "normal"
+        "${GITHUB_WORKSPACE}/tools/cargo-licenses.sh" -o "${OUTPUT_PATH}" -e "normal"
         echo "::endgroup::"
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       env:
-        OUTPUT_PATH: ${{ github.workspace }}\target\licenses
+        OUTPUT_PATH: ${{ inputs.working-directory }}\target\licenses
 
     - name: Archive Licenses (normal)
       if: ${{ inputs.configuration == 'Release' }}
       run: |
         Write-Output "::group::zip"
-        Compress-Archive -Path '*' -DestinationPath "${env:GITHUB_WORKSPACE}\target\licenses.zip"
+        Compress-Archive -Path '*' -DestinationPath "${env:OUTPUT_PATH}\licenses.zip"
         Write-Output "::endgroup::"
       shell: pwsh
-      working-directory: ${{ github.workspace }}\target\licenses
+      working-directory: ${{ inputs.working-directory }}\target\licenses
+      env:
+        OUTPUT_PATH: ${{ inputs.working-directory }}\target
 
     - name: Collect Licenses (dev)
       if: ${{ inputs.configuration == 'Release' }}
       run: |
         echo "::group::cargo-licenses"
         mkdir -p "${OUTPUT_PATH}"
-        ./tools/cargo-licenses.sh -o "${OUTPUT_PATH}" -e "normal,dev"
+        "${GITHUB_WORKSPACE}/tools/cargo-licenses.sh" -o "${OUTPUT_PATH}" -e "normal,dev"
         echo "::endgroup::"
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       env:
-        OUTPUT_PATH: ${{ github.workspace }}\target\licenses-dev
+        OUTPUT_PATH: ${{ inputs.working-directory }}\target\licenses-dev
 
     - name: Archive Licenses (dev)
       if: ${{ inputs.configuration == 'Release' }}
       run: |
         Write-Output "::group::zip"
-        Compress-Archive -Path '*' -DestinationPath "${env:GITHUB_WORKSPACE}\target\licenses-dev.zip"
+        Compress-Archive -Path '*' -DestinationPath "${env:OUTPUT_PATH}\licenses-dev.zip"
         Write-Output "::endgroup::"
       shell: pwsh
-      working-directory: ${{ github.workspace }}\target\licenses-dev
+      working-directory: ${{ inputs.working-directory }}\target\licenses-dev
+      env:
+        OUTPUT_PATH: ${{ inputs.working-directory }}\target
 
     - name: Archive Crates
       run: |
@@ -83,7 +95,7 @@ runs:
         $LIBS = @(Get-Item -Path $TARGETS)
         if ($LIBS.Length -gt 0) {
             if (${env:CONFIGURATION} -eq "Release") {
-                Copy-Item -Path "${env:GITHUB_WORKSPACE}\target\licenses.zip" -Destination "licenses.zip" -Force
+                Copy-Item -Path "${env:LICENSE_PATH}" -Destination "licenses.zip" -Force
                 $LIBS += 'licenses.zip'
             }
 
@@ -91,17 +103,18 @@ runs:
         }
         Write-Output "::endgroup::"
       shell: pwsh
-      working-directory: ${{ github.workspace }}\target\release
+      working-directory: ${{ inputs.working-directory }}\target\release
       env:
         CONFIGURATION: ${{ inputs.configuration }}
-        OUTPUT_PATH: ${{ github.workspace }}\${{ inputs.output-dir }}
+        LICENSE_PATH: ${{ inputs.working-directory }}\target\licenses.zip
+        OUTPUT_PATH: ${{ inputs.working-directory }}\${{ inputs.output-dir }}
 
     - name: Archive Examples
       run: |
         Write-Output "::group::zip"
 
         if (${env:CONFIGURATION} -eq "Release") {
-            Copy-Item -Path "${env:GITHUB_WORKSPACE}\target\licenses-dev.zip" -Destination "licenses-dev.zip" -Force
+            Copy-Item -Path "${env:LICENSE_PATH}" -Destination "licenses-dev.zip" -Force
         }
 
         $HOST_TUPLE = "$(rustc --print host-tuple)"
@@ -121,10 +134,11 @@ runs:
 
         Write-Output "::endgroup::"
       shell: pwsh
-      working-directory: ${{ github.workspace }}\target\release\examples
+      working-directory: ${{ inputs.working-directory }}\target\release\examples
       env:
         CONFIGURATION: ${{ inputs.configuration }}
-        OUTPUT_PATH: ${{ github.workspace }}\${{ inputs.output-dir }}
+        LICENSE_PATH: ${{ inputs.working-directory }}\target\licenses-dev.zip
+        OUTPUT_PATH: ${{ inputs.working-directory }}\${{ inputs.output-dir }}
 
     - name: Archive Documentations
       run: |
@@ -132,17 +146,18 @@ runs:
         Compress-Archive -Path '*' -DestinationPath "${env:DOC_FILE_PATH}"
         Write-Output "::endgroup::"
       shell: pwsh
-      working-directory: ${{ github.workspace }}\target\doc
+      working-directory: ${{ inputs.working-directory }}\target\doc
       env:
-        DOC_FILE_PATH: ${{ github.workspace }}\${{ inputs.output-dir }}\${{ inputs.doc-filename }}
+        DOC_FILE_PATH: ${{ inputs.working-directory }}\${{ inputs.output-dir }}\${{ inputs.doc-filename }}
 
     - name: Collect Licenses
       if: ${{ inputs.configuration != 'Release' }}
       run: |
         echo "::group::cargo-licenses"
         mkdir -p "${OUTPUT_PATH}"
-        ./tools/cargo-licenses.sh -o "${OUTPUT_PATH}"
+        "${GITHUB_WORKSPACE}/tools/cargo-licenses.sh" -o "${OUTPUT_PATH}"
         echo "::endgroup::"
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       env:
-        OUTPUT_PATH: ${{ github.workspace }}\${{ inputs.output-dir }}\licenses
+        OUTPUT_PATH: ${{ inputs.working-directory }}\${{ inputs.output-dir }}\licenses

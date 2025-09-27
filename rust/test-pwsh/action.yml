@@ -5,6 +5,10 @@ inputs:
     description: Directory to store coverage reports
     required: false
     default: artifacts
+  working-directory:
+    description: Directory to work
+    required: false
+    default: ${{ github.workspace }}
 runs:
   using: composite
   steps:
@@ -14,9 +18,10 @@ runs:
         cargo test --verbose
         Write-Output "::endgroup::"
       shell: pwsh
+      working-directory: ${{ inputs.working-directory }}
       env:
         RUSTFLAGS: '-C instrument-coverage'
-        LLVM_PROFILE_FILE: '${{ github.workspace }}\target\profiles\default_%m_%p.profraw'
+        LLVM_PROFILE_FILE: '${{ inputs.working-directory }}\target\profiles\default_%m_%p.profraw'
 
     - name: Install LLVM
       run: |
@@ -24,6 +29,7 @@ runs:
         rustup component add llvm-tools
         Write-Output "::endgroup::"
       shell: pwsh
+      working-directory: ${{ inputs.working-directory }}
 
     - name: Collect Coverage
       id: coverage
@@ -55,9 +61,10 @@ runs:
 
         Write-Output "::endgroup::"
       shell: pwsh
+      working-directory: ${{ inputs.working-directory }}
       env:
         RUSTFLAGS: '-C instrument-coverage'
-        LLVM_PROFILE_PATH: '${{ github.workspace }}\target\profiles'
+        LLVM_PROFILE_PATH: '${{ inputs.working-directory }}\target\profiles'
 
     - name: Install ReportGenerator
       run: |
@@ -65,6 +72,7 @@ runs:
         dotnet tool install -g dotnet-reportgenerator-globaltool
         Write-Output "::endgroup::"
       shell: pwsh
+      working-directory: ${{ inputs.working-directory }}
 
     - name: Generate Coverage Summary Report
       run: |
@@ -75,9 +83,10 @@ runs:
         Get-Content "${env:OUTPUT_PATH}\Summary.txt"
         Get-Content "${env:OUTPUT_PATH}\SummaryGithub.md" > "${env:GITHUB_STEP_SUMMARY}"
       shell: pwsh
+      working-directory: ${{ inputs.working-directory }}
       env:
         COVERAGE_BIN: ${{ steps.coverage.outputs.coverage_bin }}
-        OUTPUT_PATH: ${{ github.workspace }}\${{ inputs.output-dir }}
+        OUTPUT_PATH: ${{ inputs.working-directory }}\${{ inputs.output-dir }}
 
     - name: Generate Coverage HTML Report
       id: html
@@ -90,6 +99,7 @@ runs:
         reportgenerator -reports:"${env:COVERAGE_BIN}" -targetdir:"${OUTPUT_DIR}" -reporttypes:"Html"
         Write-Output "::endgroup::"
       shell: pwsh
+      working-directory: ${{ inputs.working-directory }}
       env:
         COVERAGE_BIN: ${{ steps.coverage.outputs.coverage_bin }}
 
@@ -101,4 +111,4 @@ runs:
       shell: pwsh
       working-directory: ${{ steps.html.outputs.coverage_path }}
       env:
-        DOC_FILE_PATH: ${{ github.workspace }}\${{ inputs.output-dir }}\coverage.zip
+        DOC_FILE_PATH: ${{ inputs.working-directory }}\${{ inputs.output-dir }}\coverage.zip

@@ -1,5 +1,10 @@
 name: Setup
 description: Setup the environment for the repository.
+inputs:
+  working-directory:
+    description: Directory to work
+    required: false
+    default: ${{ github.workspace }}
 outputs:
   repository-name:
     description: The name of the repository
@@ -19,6 +24,7 @@ runs:
         echo "rust_target=$(rustc --print host-tuple)-$(rustc --version | cut -d ' ' -f 2)" >> "${GITHUB_OUTPUT}"
         echo "::endgroup::"
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
 
     - name: Install Extra Dependencies
       run: |
