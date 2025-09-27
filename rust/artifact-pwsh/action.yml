@@ -16,10 +16,15 @@ inputs:
     description: Directory to work
     required: false
     default: ${{ github.workspace }}
+  enable-crate-generation:
+    description: Whether to enable crate generation (1 to enable, 0 to disable)
+    required: false
+    default: 1
 runs:
   using: composite
   steps:
     - name: Generate Crates
+      if: ${{ inputs.enable-crate-generation != '0' }}
       run: |
         Write-Output "::group::cargo build"
         cargo build --release --workspace --all-features --verbose
