@@ -1,0 +1,64 @@
+name: Tauri CI Windows
+
+on:
+  workflow_call:
+    inputs:
+      use-submodules:
+        description: Whether to use submodules
+        default: false
+        required: false
+        type: boolean
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+    - name: Setup Git Global Config
+      uses: 9506hqwy/actions/common/setup-git-config@main
+
+    - name: Checkout Source Code
+      uses: actions/checkout@v5
+      with:
+        submodules: ${{ inputs.use-submodules }}
+
+    - name: Setup
+      id: setup
+      uses: 9506hqwy/actions/rust/setup-pwsh@main
+      with:
+        working-directory: ${{ github.workspace }}\src-tauri
+
+    - name: Run Tests
+      uses: 9506hqwy/actions/rust/test-pwsh@main
+      with:
+        output-dir: artifacts
+        working-directory: ${{ github.workspace }}\src-tauri
+
+    - name: Create Artifacts
+      run: cargo tauri build --debug
+
+    - name: Generate Artifact
+      uses: 9506hqwy/actions/rust/artifact-pwsh@main
+      with:
+        output-dir: artifacts
+        doc-filename: help-${{ steps.setup.outputs.rust-target }}.zip
+        working-directory: ${{ github.workspace }}\src-tauri
+        enable-crate-generation: '0'
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.setup.outputs.repository-name }}-${{ github.workflow }}-${{ steps.setup.outputs.rust-target }}-${{ github.run_number }}
+        path: ${{ github.workspace }}/src-tauri/artifacts/
+        retention-days: 1

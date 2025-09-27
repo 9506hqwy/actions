@@ -1,0 +1,81 @@
+name: Tauri CI Ubuntu
+
+on:
+  workflow_call:
+    inputs:
+      enable-lint:
+        description: Whether to enable linting (1 to enable, 0 to disable)
+        default: '1'
+        required: false
+        type: string
+      use-submodules:
+        description: Whether to use submodules
+        default: false
+        required: false
+        type: boolean
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Setup Git Global Config
+      uses: 9506hqwy/actions/common/setup-git-config@main
+
+    - name: Checkout Source Code
+      uses: actions/checkout@v5
+      with:
+        submodules: ${{ inputs.use-submodules }}
+
+    - name: Setup
+      id: setup
+      uses: 9506hqwy/actions/rust/setup-bash@main
+      with:
+        working-directory: ${{ github.workspace }}/src-tauri
+
+    - name: Check Format (Rust)
+      uses: 9506hqwy/actions/rust/static-analysis-bash@main
+      with:
+        enable-lint: ${{ inputs.enable-lint }}
+        working-directory: ${{ github.workspace }}/src-tauri
+
+    - name: Check Format (Javascript)
+      run: npm run format-check
+
+    - name: Check Lint (Javascript)
+      run: npm run lint-check
+
+    - name: Run Tests
+      uses: 9506hqwy/actions/rust/test-bash@main
+      with:
+        output-dir: artifacts
+        working-directory: ${{ github.workspace }}/src-tauri
+
+    - name: Create Artifacts
+      run: cargo tauri build --debug
+
+    - name: Generate Artifact
+      uses: 9506hqwy/actions/rust/artifact-bash@main
+      with:
+        output-dir: artifacts
+        doc-filename: help-${{ steps.setup.outputs.rust-target }}.tar.gz
+        working-directory: ${{ github.workspace }}/src-tauri
+        enable-crate-generation: '0'
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.setup.outputs.repository-name }}-${{ github.workflow }}-${{ steps.setup.outputs.rust-target }}-${{ github.run_number }}
+        path: ${{ github.workspace }}/src-tauri/artifacts/
+        retention-days: 1
