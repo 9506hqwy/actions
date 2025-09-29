@@ -6,7 +6,7 @@ on:
       # https://github.com/orgs/community/discussions/11692
       redmine-versions:
         description: Redmine versions to test
-        default: '["4.0", "4.1", "4.2", "5.0", "5.1", "6.0"]'
+        default: '["4.0", "4.1", "4.2", "5.0", "5.1", "6.0", "6.1"]'
         required: false
         type: string
       use-submodules:
