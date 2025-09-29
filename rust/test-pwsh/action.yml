@@ -41,8 +41,20 @@ runs:
         $OBJECT_ARGS = @($TEST_BIN) |% { "--object=$_" }
 
         $profiles = @(Get-ChildItem -Path "${env:LLVM_PROFILE_PATH}\default_*.profraw" -Recurse)
+        $SPLITS = [Math]::Ceiling($profiles.Length / 10)
 
         $env:PATH ="$(rustc --print sysroot)\lib\rustlib\${HOST_TUPLE}\bin;${env:PATH}"
+
+        for($i = 0; $i -lt $SPLITS; $i++) {
+            $start = $i * 10
+            $end = $start + 9
+            llvm-profdata.exe merge `
+                --sparse `
+                --output="${env:LLVM_PROFILE_PATH}\default.profdata.idx_${i}" `
+                @($profiles[$start..$end] |% { Resolve-Path $_ -Relative })
+        }
+
+        $profiles = @(Get-ChildItem -Path "${env:LLVM_PROFILE_PATH}\default.profdata.idx_*" -Recurse)
 
         llvm-profdata.exe merge `
             --sparse `
