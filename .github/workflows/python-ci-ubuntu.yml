@@ -30,6 +30,17 @@ jobs:
       with:
         submodules: ${{ inputs.use-submodules }}
 
+    - name: Restore PyPI Packages Cache
+      uses: actions/cache/restore@v4
+      with:
+        key: ${{ runner.os }}-${{ runner.arch }}-pypi-${{ hashFiles('**/uv.lock') }}
+        path: |
+          ~/.cache/pip
+          ~/.cache/uv
+          ~/.local/share/uv
+        restore-keys: |
+          ${{ runner.os }}-${{ runner.arch }}-pypi-
+
     - name: Setup
       id: setup
       uses: 9506hqwy/actions/python/setup-bash@main
@@ -45,6 +56,18 @@ jobs:
         repository-name: ${{ steps.setup.outputs.repository-name }}
         output-dir: artifacts
         doc-filename: help-${{ steps.setup.outputs.repository-name }}.tar.gz
+
+    - name: Reduce UV Cache Size
+      run: uv cache prune --ci
+
+    - name: Save PyPI Packages Cache
+      uses: actions/cache/save@v4
+      with:
+        key: ${{ runner.os }}-${{ runner.arch }}-pypi-${{ hashFiles('**/uv.lock') }}
+        path: |
+          ~/.cache/pip
+          ~/.cache/uv
+          ~/.local/share/uv
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
