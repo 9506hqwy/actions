@@ -46,6 +46,16 @@ jobs:
         mkdir -p ./artifacts
         echo "name=${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}" >> "${GITHUB_OUTPUT}"
 
+    - name: Restore NuGet Packages Cache
+      uses: actions/cache/restore@v4
+      with:
+        key: ${{ runner.os }}-${{ runner.arch }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        path: |
+          ~/.nuget/packages
+          !~/.nuget/packages/unwanted
+        restore-keys: |
+          ${{ runner.os }}-${{ runner.arch }}-nuget-
+
     - name: Restore Dependencies
       uses: 9506hqwy/actions/dotnet/restore@main
 
@@ -72,6 +82,14 @@ jobs:
       with:
         output-dir: artifacts
         doc-filename: help-${{ steps.repository.outputs.name }}.tar.gz
+
+    - name: Save NuGet Packages Cache
+      uses: actions/cache/save@v4
+      with:
+        key: ${{ runner.os }}-${{ runner.arch }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        path: |
+          ~/.nuget/packages
+          !~/.nuget/packages/unwanted
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
