@@ -35,6 +35,16 @@ jobs:
       with:
         submodules: ${{ inputs.use-submodules }}
 
+    - name: Restore Go Modules Cache
+      uses: actions/cache/restore@v4
+      with:
+        key: ${{ runner.os }}-${{ runner.arch }}-go-${{ hashFiles('**/go.sum') }}
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        restore-keys: |
+          ${{ runner.os }}-${{ runner.arch }}-go-
+
     - name: Setup
       id: setup
       uses: 9506hqwy/actions/go/setup-bash@main
@@ -53,6 +63,14 @@ jobs:
       uses: 9506hqwy/actions/go/artifact-bash@main
       with:
         output-dir: artifacts
+
+    - name: Save Go Modules Cache
+      uses: actions/cache/save@v4
+      with:
+        key: ${{ runner.os }}-${{ runner.arch }}-go-${{ hashFiles('**/go.sum') }}
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
