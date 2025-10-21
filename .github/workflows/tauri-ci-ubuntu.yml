@@ -76,6 +76,7 @@ jobs:
       run: npm install
 
     - name: Save npm Modules Cache
+      if: ${{ github.ref_name == 'main' }}
       uses: actions/cache/save@v4
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-npm-${{ hashFiles('**/package-lock.json') }}
@@ -118,6 +119,7 @@ jobs:
         enable-crate-generation: '0'
 
     - name: Save Rust Crate Cache
+      if: ${{ github.ref_name == 'main' }}
       uses: actions/cache/save@v4
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}

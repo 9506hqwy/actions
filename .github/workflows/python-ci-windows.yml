@@ -61,6 +61,7 @@ jobs:
       run: uv cache prune --ci
 
     - name: Save PyPI Packages Cache
+      if: ${{ github.ref_name == 'main' }}
       uses: actions/cache/save@v4
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-pypi-${{ hashFiles('**/uv.lock') }}

@@ -70,6 +70,7 @@ jobs:
         doc-filename: help-${{ steps.setup.outputs.rust-target }}.tar.gz
 
     - name: Save Rust Crate Cache
+      if: ${{ github.ref_name == 'main' }}
       uses: actions/cache/save@v4
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}

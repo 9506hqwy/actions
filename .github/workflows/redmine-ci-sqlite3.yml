@@ -102,6 +102,7 @@ jobs:
       uses: 9506hqwy/actions/redmine/setup-playwright@main
 
     - name: Save npm Modules Cache
+      if: ${{ github.ref_name == 'main' }}
       uses: actions/cache/save@v4
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-redmine${{ steps.setup.outputs.redmine-version }}-npm-${{ hashFiles('**/package-lock.json') }}
