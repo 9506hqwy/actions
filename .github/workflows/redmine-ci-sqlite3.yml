@@ -14,6 +14,11 @@ on:
         default: false
         required: false
         type: boolean
+      enable-e2e-test:
+        description: Whether to enable end-to-end tests
+        default: true
+        required: false
+        type: boolean
 
 permissions:
   contents: read
@@ -83,6 +88,7 @@ jobs:
         plugin-name: ${{ steps.setup.outputs.repository-name }}
 
     - name: Initialize Environments
+      if: ${{ inputs.enable-e2e-test }}
       uses: 9506hqwy/actions/redmine/init-db@main
       with:
         working-directory: ${{ env.REDMINE_HOME }}
@@ -90,6 +96,7 @@ jobs:
     # Note: no cache for browser binaries.
     # https://playwright.dev/docs/ci#caching-browsers
     - name: Restore npm Modules Cache
+      if: ${{ inputs.enable-e2e-test }}
       uses: actions/cache/restore@v4
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-redmine${{ steps.setup.outputs.redmine-version }}-npm-${{ hashFiles('**/package-lock.json') }}
@@ -99,10 +106,11 @@ jobs:
           ${{ runner.os }}-${{ runner.arch }}-redmine${{ steps.setup.outputs.redmine-version }}-npm-
 
     - name: Install Playwright
+      if: ${{ inputs.enable-e2e-test }}
       uses: 9506hqwy/actions/redmine/setup-playwright@main
 
     - name: Save npm Modules Cache
-      if: ${{ github.ref_name == 'main' }}
+      if: ${{ inputs.enable-e2e-test && github.ref_name == 'main' }}
       uses: actions/cache/save@v4
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-redmine${{ steps.setup.outputs.redmine-version }}-npm-${{ hashFiles('**/package-lock.json') }}
@@ -110,6 +118,7 @@ jobs:
           ./node_modules
 
     - name: Run Playwright
+      if: ${{ inputs.enable-e2e-test }}
       uses: 9506hqwy/actions/redmine/playwright@main
       with:
         working-directory: ${{ env.REDMINE_HOME }}
