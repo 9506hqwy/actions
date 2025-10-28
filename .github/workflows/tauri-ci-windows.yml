@@ -33,17 +33,6 @@ jobs:
       with:
         submodules: ${{ inputs.use-submodules }}
 
-    - name: Restore Rust Crate Cache
-      uses: actions/cache/restore@v4
-      with:
-        key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        path: |
-          ~\.cargo\registry
-          ~\.cargo\git
-          .\src-tauri\target
-        restore-keys: |
-          ${{ runner.os }}-${{ runner.arch }}-cargo-
-
     - name: Restore npm Modules Cache
       uses: actions/cache/restore@v4
       with:
@@ -86,16 +75,6 @@ jobs:
         doc-filename: help-${{ steps.setup.outputs.rust-target }}.zip
         working-directory: ${{ github.workspace }}\src-tauri
         enable-crate-generation: '0'
-
-    - name: Save Rust Crate Cache
-      if: ${{ github.ref_name == 'main' }}
-      uses: actions/cache/save@v4
-      with:
-        key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        path: |
-          ~\.cargo\registry
-          ~\.cargo\git
-          .\src-tauri\target
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
