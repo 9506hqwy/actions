@@ -21,6 +21,9 @@ runs:
         go test -v -cover -coverprofile "${COVERAGE_BIN}" ./...
         Write-Output "::endgroup::"
       shell: pwsh
+      env:
+        # https://github.com/golang/go/issues/75031
+        GOTOOLCHAIN: go1.25.3+auto
 
     - name: Generate Coverage Summary Report
       run: |
