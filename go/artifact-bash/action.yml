@@ -12,6 +12,13 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Download Modules
+      run: |
+        echo "::group::go mod download"
+        go mod download
+        echo "::endgroup::"
+      shell: bash
+
     - name: Generate Binaries
       run: |
         echo "::group::go build"

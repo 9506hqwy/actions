@@ -12,6 +12,13 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Download Modules
+      run: |
+        Write-Output "::group::go mod download"
+        go mod download
+        Write-Output "::endgroup::"
+      shell: pwsh
+
     - name: Generate Binaries
       run: |
         Write-Output "::group::go build"

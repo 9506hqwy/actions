@@ -31,10 +31,3 @@ runs:
         Write-Output "go_mod_cache=${GO_MOD_CACHE}" >> "${env:GITHUB_OUTPUT}"
         Write-Output "::endgroup::"
       shell: pwsh
-
-    - name: Download Modules
-      run: |
-        Write-Output "::group::go mod download"
-        go mod download
-        Write-Output "::endgroup::"
-      shell: pwsh

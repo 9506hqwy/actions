@@ -27,10 +27,3 @@ runs:
         echo "go_mod_cache=$(go env GOMODCACHE)" >> "${GITHUB_OUTPUT}"
         echo "::endgroup::"
       shell: bash
-
-    - name: Download Modules
-      run: |
-        echo "::group::go mod download"
-        go mod download
-        echo "::endgroup::"
-      shell: bash
