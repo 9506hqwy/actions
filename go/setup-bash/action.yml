@@ -7,6 +7,12 @@ outputs:
   go-target:
     description: The Go target architecture and version
     value: ${{ steps.repository.outputs.go_target }}
+  go-cache:
+    description: The Go cache directory
+    value: ${{ steps.repository.outputs.go_cache }}
+  go-mod-cache:
+    description: The Go modules cache directory
+    value: ${{ steps.repository.outputs.go_mod_cache }}
 runs:
   using: composite
   steps:
@@ -17,6 +23,8 @@ runs:
         mkdir -p ./artifacts
         echo "name=${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}" >> "${GITHUB_OUTPUT}"
         echo "go_target=$(go env GOARCH)-$(go env GOOS)-$(go env GOVERSION)" >> "${GITHUB_OUTPUT}"
+        echo "go_cache=$(go env GOCACHE)" >> "${GITHUB_OUTPUT}"
+        echo "go_mod_cache=$(go env GOMODCACHE)" >> "${GITHUB_OUTPUT}"
         echo "::endgroup::"
       shell: bash
 

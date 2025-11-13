@@ -8,6 +8,13 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Download Modules
+      run: |
+        Write-Output "::group::go mod download"
+        go mod download
+        Write-Output "::endgroup::"
+      shell: pwsh
+
     - name: Run Tests
       id: test
       run: |

@@ -7,6 +7,12 @@ outputs:
   go-target:
     description: The Go target architecture and version
     value: ${{ steps.repository.outputs.go_target }}
+  go-cache:
+    description: The Go cache directory
+    value: ${{ steps.repository.outputs.go_cache }}
+  go-mod-cache:
+    description: The Go modules cache directory
+    value: ${{ steps.repository.outputs.go_mod_cache }}
 runs:
   using: composite
   steps:
@@ -19,6 +25,10 @@ runs:
         Write-Output "name=${REPOSITORY_NAME}" >> "${env:GITHUB_OUTPUT}"
         $GO_TARGET = "$(go env GOARCH)-$(go env GOOS)-$(go env GOVERSION)"
         Write-Output "go_target=${GO_TARGET}" >> "${env:GITHUB_OUTPUT}"
+        $GO_CACHE = "$(go env GOCACHE)"
+        Write-Output "go_cache=${GO_CACHE}" >> "${env:GITHUB_OUTPUT}"
+        $GO_MOD_CACHE = "$(go env GOMODCACHE)"
+        Write-Output "go_mod_cache=${GO_MOD_CACHE}" >> "${env:GITHUB_OUTPUT}"
         Write-Output "::endgroup::"
       shell: pwsh
 

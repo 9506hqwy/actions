@@ -8,6 +8,13 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Download Modules
+      run: |
+        echo "::group::go mod download"
+        go mod download
+        echo "::endgroup::"
+      shell: bash
+
     - name: Check Format
       run: |
         echo "::group::go fmt"

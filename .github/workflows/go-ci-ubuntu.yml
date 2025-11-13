@@ -35,19 +35,19 @@ jobs:
       with:
         submodules: ${{ inputs.use-submodules }}
 
+    - name: Setup
+      id: setup
+      uses: 9506hqwy/actions/go/setup-bash@main
+
     - name: Restore Go Modules Cache
       uses: actions/cache/restore@v4
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-go-${{ hashFiles('**/go.sum') }}
         path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
+          ${{ steps.setup.outputs.go-cache }}
+          ${{ steps.setup.outputs.go-mod-cache }}
         restore-keys: |
           ${{ runner.os }}-${{ runner.arch }}-go-
-
-    - name: Setup
-      id: setup
-      uses: 9506hqwy/actions/go/setup-bash@main
 
     - name: Check Format
       uses: 9506hqwy/actions/go/static-analysis-bash@main
@@ -70,8 +70,8 @@ jobs:
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-go-${{ hashFiles('**/go.sum') }}
         path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
+          ${{ steps.setup.outputs.go-cache }}
+          ${{ steps.setup.outputs.go-mod-cache }}
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v5
