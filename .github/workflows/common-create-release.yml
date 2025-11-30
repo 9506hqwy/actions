@@ -47,5 +47,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         TITLE_PREFIX: ${{ inputs.title-prefix }}
       run: |
+        find ./artifacts -type f
         gh config set prompt disabled
-        gh release create "${GITHUB_REF_NAME}" ./artifacts/*/* -t "${TITLE_PREFIX}${GITHUB_REF_NAME}" -d
+        gh release create "${GITHUB_REF_NAME}" './artifacts/*/*' -t "${TITLE_PREFIX}${GITHUB_REF_NAME}" -d
