@@ -36,7 +36,7 @@ jobs:
       uses: 9506hqwy/actions/common/setup-git-config@main
 
     - name: Checkout Source Code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         submodules: ${{ inputs.use-submodules }}
 
