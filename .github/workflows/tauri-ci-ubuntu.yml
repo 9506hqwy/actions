@@ -72,6 +72,13 @@ jobs:
         path: |
           ./node_modules
 
+    - name: Upload npm Modules Lock File
+      uses: actions/upload-artifact@v5
+      with:
+        name: package-lock-${{ runner.os }}-${{ runner.arch }}-${{ github.run_number }}
+        path: ${{ github.workspace }}/package-lock.json
+        retention-days: 1
+
     - name: Setup
       id: setup
       uses: 9506hqwy/actions/rust/setup-bash@main
