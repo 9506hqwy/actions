@@ -23,6 +23,8 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    timeout-minutes: 30
+
     env:
       REDMINE_HOME: /usr/src/redmine
       RAILS_ENV: test
