@@ -36,7 +36,7 @@ jobs:
         submodules: ${{ inputs.use-submodules }}
 
     - name: Restore Rust Crate Cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
         path: |
@@ -63,7 +63,7 @@ jobs:
 
     - name: Save Rust Crate Cache
       if: ${{ github.ref_name == 'main' }}
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
         path: |

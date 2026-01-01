@@ -42,7 +42,7 @@ jobs:
       uses: 9506hqwy/actions/go/setup-bash@main
 
     - name: Restore Go Modules Cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-go-${{ hashFiles('**/go.sum') }}
         path: |
@@ -68,7 +68,7 @@ jobs:
 
     - name: Save Go Modules Cache
       if: ${{ github.ref_name == 'main' }}
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-go-${{ hashFiles('**/go.sum') }}
         path: |

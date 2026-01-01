@@ -33,7 +33,7 @@ jobs:
         submodules: ${{ inputs.use-submodules }}
 
     - name: Restore PyPI Packages Cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-pypi-${{ hashFiles('**/uv.lock') }}
         path: |
@@ -64,7 +64,7 @@ jobs:
 
     - name: Save PyPI Packages Cache
       if: ${{ github.ref_name == 'main' }}
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-pypi-${{ hashFiles('**/uv.lock') }}
         path: |
