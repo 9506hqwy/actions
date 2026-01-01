@@ -40,7 +40,7 @@ jobs:
       with:
         submodules: ${{ inputs.use-submodules }}
 
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v7
       with:
         path: artifacts
 
