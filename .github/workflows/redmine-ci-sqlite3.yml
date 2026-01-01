@@ -126,7 +126,7 @@ jobs:
         working-directory: ${{ env.REDMINE_HOME }}
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ steps.setup.outputs.repository-name }}-redmine${{ steps.setup.outputs.redmine-version }}-ruby${{ steps.setup.outputs.ruby-version }}-sqlite3-${{ github.run_number }}
         path: artifacts/
