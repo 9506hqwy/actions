@@ -43,7 +43,7 @@ jobs:
         output-dir: artifacts
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ steps.setup.outputs.repository-name }}-${{ github.workflow }}-${{ steps.setup.outputs.go-target }}-${{ github.run_number }}
         path: ${{ github.workspace }}/artifacts/

@@ -73,7 +73,7 @@ jobs:
           ~\.local\share\uv
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ steps.setup.outputs.repository-name }}-${{ github.workflow }}-${{ runner.os }}-${{ runner.arch }}-${{ github.run_number }}
         path: ${{ github.workspace }}/artifacts/
