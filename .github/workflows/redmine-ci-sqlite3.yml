@@ -99,7 +99,7 @@ jobs:
     # https://playwright.dev/docs/ci#caching-browsers
     - name: Restore npm Modules Cache
       if: ${{ inputs.enable-e2e-test }}
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-redmine${{ steps.setup.outputs.redmine-version }}-npm-${{ hashFiles('**/package-lock.json') }}
         path: |
@@ -113,7 +113,7 @@ jobs:
 
     - name: Save npm Modules Cache
       if: ${{ inputs.enable-e2e-test && github.ref_name == 'main' }}
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-redmine${{ steps.setup.outputs.redmine-version }}-npm-${{ hashFiles('**/package-lock.json') }}
         path: |

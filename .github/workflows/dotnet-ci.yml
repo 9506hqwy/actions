@@ -49,7 +49,7 @@ jobs:
         echo "name=${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}" >> "${GITHUB_OUTPUT}"
 
     - name: Restore NuGet Packages Cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-nuget-${{ hashFiles('**/packages.lock.json') }}
         path: |
@@ -87,7 +87,7 @@ jobs:
 
     - name: Save NuGet Packages Cache
       if: ${{ github.ref_name == 'main' }}
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       with:
         key: ${{ runner.os }}-${{ runner.arch }}-nuget-${{ hashFiles('**/packages.lock.json') }}
         path: |
