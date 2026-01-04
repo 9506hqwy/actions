@@ -34,6 +34,10 @@ runs:
 
             for CMD in $(ls "${DIR}")
             do
+                if [[ ! -d "${DIR}/${CMD}" ]]; then
+                    continue
+                fi
+
                 TEMP_PATH=""
                 BIN_PATH="${OUTPUT_PATH}/${CMD}"
                 if [[ "${CONFIGURATION}" == "Release" ]]; then
