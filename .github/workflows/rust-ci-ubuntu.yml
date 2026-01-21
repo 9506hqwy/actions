@@ -40,17 +40,6 @@ jobs:
       with:
         submodules: ${{ inputs.use-submodules }}
 
-    - name: Restore Rust Crate Cache
-      uses: actions/cache/restore@v5
-      with:
-        key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          ./target
-        restore-keys: |
-          ${{ runner.os }}-${{ runner.arch }}-cargo-
-
     - name: Setup
       id: setup
       uses: 9506hqwy/actions/rust/setup-bash@main
@@ -70,16 +59,6 @@ jobs:
       with:
         output-dir: artifacts
         doc-filename: help-${{ steps.setup.outputs.rust-target }}.tar.gz
-
-    - name: Save Rust Crate Cache
-      if: ${{ github.ref_name == 'main' }}
-      uses: actions/cache/save@v5
-      with:
-        key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          ./target
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v6
