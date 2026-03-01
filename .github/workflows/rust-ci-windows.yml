@@ -51,7 +51,7 @@ jobs:
         doc-filename: help-${{ steps.setup.outputs.rust-target }}.zip
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ steps.setup.outputs.repository-name }}-${{ github.workflow }}-${{ steps.setup.outputs.rust-target }}-${{ github.run_number }}
         path: ${{ github.workspace }}/artifacts/

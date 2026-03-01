@@ -95,7 +95,7 @@ jobs:
           !~/.nuget/packages/unwanted
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ steps.repository.outputs.name }}-${{ github.workflow }}-${{ runner.os }}-${{ runner.arch }}-${{ github.run_number }}
         path: ${{ github.workspace }}/artifacts/
