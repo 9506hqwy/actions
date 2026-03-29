@@ -26,6 +26,11 @@ runs:
         $GOARCH = go env GOARCH
 
         Get-Item @(".\cmd", ".\examples") -ErrorAction ignore |% { Get-ChildItem "$_" -Directory |% {
+            $GO_FILES = Get-ChildItem "${_}" -Filter "*.go"
+            if ($GO_FILES.Length -eq 0) {
+                return
+            }
+
             $Name = $_.Name
             $TEMP_PATH = ""
             $BIN_PATH = "${env:OUTPUT_PATH}\${Name}.exe"

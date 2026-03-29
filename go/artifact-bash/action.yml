@@ -38,6 +38,10 @@ runs:
                     continue
                 fi
 
+                if ! find "${DIR}/${CMD}" -name "*.go" | grep -q '\.go'; then
+                    continue
+                fi
+
                 TEMP_PATH=""
                 BIN_PATH="${OUTPUT_PATH}/${CMD}"
                 if [[ "${CONFIGURATION}" == "Release" ]]; then
