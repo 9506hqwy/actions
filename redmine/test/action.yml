@@ -13,12 +13,6 @@ runs:
     - name: Run Tests
       run: |
         echo "::group::ruke test"
-        if [[ ${REDMINE_VERSION} =~ ^4\.0\. ]] ; then
-            # "\xC5" from ASCII-8BIT to UTF-8 (Encoding::UndefinedConversionError)
-            # https://www.redmine.org/issues/30963
-            unset COVERAGE
-        fi
-
         # skip db:test:prepare
         bundle exec rake test TEST="plugins/${PLUGIN_NAME}/test/**/*_test.rb"
         echo "::endgroup::"

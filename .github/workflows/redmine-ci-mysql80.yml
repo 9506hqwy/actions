@@ -86,7 +86,7 @@ jobs:
         working-directory: ${{ env.REDMINE_HOME }}
 
     - name: Check Format
-      if: matrix.version == '4.2'
+      if: matrix.version == '5.0'
       uses: 9506hqwy/actions/redmine/static-analysis@main
       with:
         working-directory: ${{ env.REDMINE_HOME }}
