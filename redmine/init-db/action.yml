@@ -11,7 +11,18 @@ runs:
       run: |
         echo "::group::initialize environments"
         bundle exec rake db:drop
+        # FIXME:
+        # Rails 8.0 or later, task `db:migrate` use 'schema.rb' for creating db.
+        # To create db using migration files, need to use task `db:migrate:reset`.
+        # (see https://github.com/rails/rails/pull/53320)
+        #
+        # But using task `db:migrate:reset` to create db do not work expectly on GitHub Actions runner.
+        # Task `db:migrate:reset` do work fine on local machine.
+        #
+        # So, delete 'schema.rb' before creating db.
+        rm -rf db/schema.rb
         bundle exec rake db:create db:migrate redmine:plugins:migrate
+        bundle exec rake db:migrate:status
         echo ja | bundle exec rake redmine:load_default_data
         echo "::endgroup::"
 
