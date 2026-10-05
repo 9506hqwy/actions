@@ -1,0 +1,13 @@
+name: Setup Mono
+description: Setup the Mono.
+runs:
+  using: composite
+  steps:
+    - name: Install Essentials
+      run: |
+        echo "::group::apt-get"
+        sudo apt-get update -y
+        sudo apt-get install -y \
+            mono-complete
+        echo "::endgroup::"
+      shell: bash
